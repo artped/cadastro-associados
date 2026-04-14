@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  cassandra:
+    image: cassandra:4.1
+    container_name: cassandra-associados
+    ports:
+      - "9042:9042"
+    environment:
+      - CASSANDRA_CLUSTER_NAME=CadastroCluster
+      - CASSANDRA_DC=datacenter1
+      - CASSANDRA_ENDPOINT_SNITCH=SimpleSnitch
+      - MAX_HEAP_SIZE=256M
+      - HEAP_NEWSIZE=128M
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'describe cluster'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  cassandra-init:
+    image: cassandra:4.1
+    container_name: cassandra-init
+    depends_on:
+      cassandra:
+        condition: service_healthy
+    volumes:
+      - ./src/main/resources/schema.cql:/schema.cql
+    command: >
+      bash -c "
+        echo 'Aguardando Cassandra...' &&
+        sleep 10 &&
+        cqlsh cassandra -f /schema.cql &&
+        echo 'Schema criado com sucesso!'
+      "
+
+volumes:
+  cassandra_data:
+    driver: local
