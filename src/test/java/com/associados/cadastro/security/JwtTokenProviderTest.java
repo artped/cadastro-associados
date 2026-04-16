@@ -7,14 +7,28 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class JwtTokenProviderTest {
 
+    private static final String TEST_SECRET =
+            "test-only-secret-do-not-use-in-any-deployed-environment-0000";
+
     private JwtTokenProvider jwtTokenProvider;
 
     @BeforeEach
     void setUp() {
-        jwtTokenProvider = new JwtTokenProvider(
-                "cadastro-associados-secret-key-que-deve-ser-alterada-em-producao-2024",
-                86400000L
-        );
+        jwtTokenProvider = new JwtTokenProvider(TEST_SECRET, 86400000L);
+    }
+
+    @Test
+    void deveRejeitarSegredoVazio() {
+        assertThrows(IllegalStateException.class,
+                () -> new JwtTokenProvider("", 86400000L));
+        assertThrows(IllegalStateException.class,
+                () -> new JwtTokenProvider("   ", 86400000L));
+    }
+
+    @Test
+    void deveRejeitarSegredoCurto() {
+        assertThrows(IllegalStateException.class,
+                () -> new JwtTokenProvider("too-short", 86400000L));
     }
 
     @Test
