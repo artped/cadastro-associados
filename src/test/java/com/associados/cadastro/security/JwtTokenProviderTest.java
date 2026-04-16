@@ -12,7 +12,7 @@ class JwtTokenProviderTest {
     @BeforeEach
     void setUp() {
         jwtTokenProvider = new JwtTokenProvider(
-                "cadastro-associados-secret-key-que-deve-ser-alterada-em-producao-2024",
+                "test-only-secret-key-do-not-use-in-production-must-be-at-least-64-chars-long",
                 86400000L
         );
     }
