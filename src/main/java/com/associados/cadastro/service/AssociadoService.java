@@ -51,17 +51,36 @@ public class AssociadoService {
     }
 
     public List<AssociadoDTO> buscarPorFiltro(String nome, String cpf, String email, String cidade, String estado, Boolean ativo) {
-        List<Associado> todos = associadoRepository.findAllAssociados();
+        List<Associado> resultados = buscarNoCassandra(cpf, estado, cidade, ativo);
 
-        return todos.stream()
+        return resultados.stream()
                 .filter(a -> nome == null || a.getNome().toLowerCase().contains(nome.toLowerCase()))
-                .filter(a -> cpf == null || a.getCpf().equals(cpf))
                 .filter(a -> email == null || a.getEmail().toLowerCase().contains(email.toLowerCase()))
                 .filter(a -> cidade == null || (a.getCidade() != null && a.getCidade().toLowerCase().contains(cidade.toLowerCase())))
-                .filter(a -> estado == null || (a.getEstado() != null && a.getEstado().equalsIgnoreCase(estado)))
-                .filter(a -> ativo == null || a.getAtivo().equals(ativo))
                 .map(this::toDTO)
                 .collect(Collectors.toList());
+    }
+
+    private List<Associado> buscarNoCassandra(String cpf, String estado, String cidade, Boolean ativo) {
+        if (cpf != null) {
+            return associadoRepository.findByCpf(cpf);
+        }
+        if (estado != null && ativo != null) {
+            return associadoRepository.findByEstadoAndAtivo(estado, ativo);
+        }
+        if (cidade != null && ativo != null) {
+            return associadoRepository.findByCidadeAndAtivo(cidade, ativo);
+        }
+        if (estado != null) {
+            return associadoRepository.findByEstado(estado);
+        }
+        if (cidade != null) {
+            return associadoRepository.findByCidade(cidade);
+        }
+        if (ativo != null) {
+            return associadoRepository.findByAtivo(ativo);
+        }
+        return associadoRepository.findAllAssociados();
     }
 
     public AssociadoDTO atualizar(UUID id, AssociadoDTO dto) {
@@ -120,17 +139,13 @@ public class AssociadoService {
     }
 
     public long contarAssociadosAtivos() {
-        return associadoRepository.findAllAssociados()
-                .stream()
-                .filter(a -> Boolean.TRUE.equals(a.getAtivo()))
-                .count();
+        return associadoRepository.findByAtivo(true).size();
     }
 
     private void validarCpfUnico(String cpf, UUID idExcluir) {
-        List<Associado> todos = associadoRepository.findAllAssociados();
-        boolean cpfExiste = todos.stream()
-                .filter(a -> !a.getId().equals(idExcluir))
-                .anyMatch(a -> a.getCpf().equals(cpf));
+        List<Associado> comMesmoCpf = associadoRepository.findByCpf(cpf);
+        boolean cpfExiste = comMesmoCpf.stream()
+                .anyMatch(a -> !a.getId().equals(idExcluir));
 
         if (cpfExiste) {
             throw new BusinessException("Já existe um associado cadastrado com o CPF: " + cpf);

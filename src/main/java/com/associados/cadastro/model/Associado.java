@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.cassandra.core.cql.PrimaryKeyType;
 import org.springframework.data.cassandra.core.mapping.Column;
+import org.springframework.data.cassandra.core.mapping.Indexed;
 import org.springframework.data.cassandra.core.mapping.PrimaryKeyColumn;
 import org.springframework.data.cassandra.core.mapping.Table;
 
@@ -23,12 +24,15 @@ public class Associado {
     @PrimaryKeyColumn(name = "id", ordinal = 0, type = PrimaryKeyType.PARTITIONED)
     private UUID id;
 
+    @Indexed
     @Column("nome")
     private String nome;
 
+    @Indexed
     @Column("cpf")
     private String cpf;
 
+    @Indexed
     @Column("email")
     private String email;
 
@@ -47,9 +51,11 @@ public class Associado {
     @Column("bairro")
     private String bairro;
 
+    @Indexed
     @Column("cidade")
     private String cidade;
 
+    @Indexed
     @Column("estado")
     private String estado;
 
@@ -65,6 +71,7 @@ public class Associado {
     @Column("data_atualizacao")
     private LocalDateTime dataAtualizacao;
 
+    @Indexed
     @Column("ativo")
     private Boolean ativo;
 }
