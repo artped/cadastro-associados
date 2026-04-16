@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -33,12 +34,29 @@ public class CsvController {
                 .body(bytes);
     }
 
+    private static final List<String> ALLOWED_CSV_CONTENT_TYPES = List.of(
+            "text/csv",
+            "application/vnd.ms-excel",
+            "text/plain"
+    );
+
     @PostMapping("/importar")
     @Operation(summary = "Importar associados de arquivo CSV")
     public ResponseEntity<Map<String, Object>> importar(@RequestParam("file") MultipartFile file) {
         if (file.isEmpty()) {
             return ResponseEntity.badRequest()
                     .body(Map.of("erro", "Arquivo CSV está vazio"));
+        }
+
+        String contentType = file.getContentType();
+        String filename = file.getOriginalFilename();
+
+        boolean validType = contentType != null && ALLOWED_CSV_CONTENT_TYPES.contains(contentType.toLowerCase());
+        boolean validExtension = filename != null && filename.toLowerCase().endsWith(".csv");
+
+        if (!validType && !validExtension) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("erro", "Tipo de arquivo inválido. Apenas arquivos CSV são permitidos."));
         }
 
         CsvService.ImportResult result = csvService.importarCsv(file);

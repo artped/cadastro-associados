@@ -37,6 +37,22 @@ public class CsvService {
             "Cidade", "Estado", "CEP", "Data Nascimento", "Ativo"
     };
 
+    private static final String FORMULA_INJECTION_CHARS = "=+-@\t\r";
+
+    /**
+     * Sanitizes a CSV field to prevent formula injection attacks.
+     * Fields starting with =, +, -, @, tab, or carriage return are prefixed with a single quote.
+     */
+    private static String sanitizeCsvField(String value) {
+        if (value == null || value.isEmpty()) {
+            return value;
+        }
+        if (FORMULA_INJECTION_CHARS.indexOf(value.charAt(0)) >= 0) {
+            return "'" + value;
+        }
+        return value;
+    }
+
     public String exportarCsv() {
         List<Associado> associados = associadoRepository.findAllAssociados();
 
@@ -46,17 +62,17 @@ public class CsvService {
 
             for (Associado a : associados) {
                 String[] linha = {
-                        a.getNome(),
-                        a.getCpf(),
-                        a.getEmail(),
-                        a.getTelefone(),
-                        a.getLogradouro(),
-                        a.getNumero(),
-                        a.getComplemento(),
-                        a.getBairro(),
-                        a.getCidade(),
-                        a.getEstado(),
-                        a.getCep(),
+                        sanitizeCsvField(a.getNome()),
+                        sanitizeCsvField(a.getCpf()),
+                        sanitizeCsvField(a.getEmail()),
+                        sanitizeCsvField(a.getTelefone()),
+                        sanitizeCsvField(a.getLogradouro()),
+                        sanitizeCsvField(a.getNumero()),
+                        sanitizeCsvField(a.getComplemento()),
+                        sanitizeCsvField(a.getBairro()),
+                        sanitizeCsvField(a.getCidade()),
+                        sanitizeCsvField(a.getEstado()),
+                        sanitizeCsvField(a.getCep()),
                         a.getDataNascimento() != null ? a.getDataNascimento().format(DATE_FORMAT) : "",
                         a.getAtivo() != null ? a.getAtivo().toString() : "true"
                 };
@@ -90,7 +106,7 @@ public class CsvService {
                         continue;
                     }
 
-                    String nome = linha[0].trim();
+                    String nome = sanitizeCsvField(linha[0].trim());
                     String cpf = linha[1].trim().replaceAll("[^0-9]", "");
 
                     if (nome.isEmpty() || cpf.isEmpty()) {
@@ -122,14 +138,14 @@ public class CsvService {
                             .id(UUID.randomUUID())
                             .nome(nome)
                             .cpf(cpf)
-                            .email(linha[2].trim())
-                            .telefone(linha[3].trim())
-                            .logradouro(linha[4].trim())
-                            .numero(linha[5].trim())
-                            .complemento(linha[6].trim())
-                            .bairro(linha[7].trim())
-                            .cidade(linha[8].trim())
-                            .estado(linha[9].trim())
+                            .email(sanitizeCsvField(linha[2].trim()))
+                            .telefone(sanitizeCsvField(linha[3].trim()))
+                            .logradouro(sanitizeCsvField(linha[4].trim()))
+                            .numero(sanitizeCsvField(linha[5].trim()))
+                            .complemento(sanitizeCsvField(linha[6].trim()))
+                            .bairro(sanitizeCsvField(linha[7].trim()))
+                            .cidade(sanitizeCsvField(linha[8].trim()))
+                            .estado(sanitizeCsvField(linha[9].trim()))
                             .cep(linha[10].trim().replaceAll("[^0-9]", ""))
                             .dataNascimento(dataNascimento)
                             .dataCadastro(LocalDateTime.now())

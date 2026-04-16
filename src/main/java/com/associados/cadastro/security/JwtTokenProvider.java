@@ -9,6 +9,8 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.Date;
 
 @Component
@@ -18,8 +20,16 @@ public class JwtTokenProvider {
     private final long expiracaoMs;
 
     public JwtTokenProvider(
-            @Value("${jwt.secret:cadastro-associados-secret-key-que-deve-ser-alterada-em-producao-2024}") String secret,
+            @Value("${jwt.secret:#{null}}") String secret,
             @Value("${jwt.expiracao:86400000}") long expiracaoMs) {
+        if (secret == null || secret.isBlank()) {
+            byte[] randomKey = new byte[64];
+            new SecureRandom().nextBytes(randomKey);
+            secret = Base64.getEncoder().encodeToString(randomKey);
+            System.err.println("WARNING: jwt.secret is not configured. A random secret was generated. "
+                    + "JWTs will not survive application restarts. "
+                    + "Set the JWT_SECRET environment variable for production use.");
+        }
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.expiracaoMs = expiracaoMs;
     }
