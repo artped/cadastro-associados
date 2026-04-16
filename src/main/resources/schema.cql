@@ -45,7 +45,10 @@ CREATE TABLE IF NOT EXISTS usuarios_por_email (
     ativo BOOLEAN
 );
 
--- Índices secundários (opcionais, para consultas mais eficientes)
+-- Índices secundários para consultas com filtros de busca
+CREATE INDEX IF NOT EXISTS idx_associados_nome ON associados (nome);
 CREATE INDEX IF NOT EXISTS idx_associados_cpf ON associados (cpf);
 CREATE INDEX IF NOT EXISTS idx_associados_email ON associados (email);
+CREATE INDEX IF NOT EXISTS idx_associados_cidade ON associados (cidade);
+CREATE INDEX IF NOT EXISTS idx_associados_estado ON associados (estado);
 CREATE INDEX IF NOT EXISTS idx_associados_ativo ON associados (ativo);
