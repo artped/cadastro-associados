@@ -14,13 +14,32 @@ import java.util.Date;
 @Component
 public class JwtTokenProvider {
 
+    /**
+     * Minimum size (in bytes) required for the HMAC-SHA256 signing key.
+     * 32 bytes = 256 bits, which matches the HS256 block size recommended by RFC 7518.
+     */
+    static final int MIN_SECRET_BYTES = 32;
+
     private final SecretKey key;
     private final long expiracaoMs;
 
     public JwtTokenProvider(
-            @Value("${jwt.secret:cadastro-associados-secret-key-que-deve-ser-alterada-em-producao-2024}") String secret,
+            @Value("${jwt.secret:}") String secret,
             @Value("${jwt.expiracao:86400000}") long expiracaoMs) {
-        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        if (secret == null || secret.isBlank()) {
+            throw new IllegalStateException(
+                    "jwt.secret (env var JWT_SECRET) não configurado. Configure uma chave com " +
+                            "no mínimo " + MIN_SECRET_BYTES + " bytes antes de iniciar a aplicação."
+            );
+        }
+        byte[] secretBytes = secret.getBytes(StandardCharsets.UTF_8);
+        if (secretBytes.length < MIN_SECRET_BYTES) {
+            throw new IllegalStateException(
+                    "jwt.secret (env var JWT_SECRET) é muito curto: " + secretBytes.length +
+                            " bytes. Mínimo exigido: " + MIN_SECRET_BYTES + " bytes (256 bits)."
+            );
+        }
+        this.key = Keys.hmacShaKeyFor(secretBytes);
         this.expiracaoMs = expiracaoMs;
     }
 

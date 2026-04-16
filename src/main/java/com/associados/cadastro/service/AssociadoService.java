@@ -59,7 +59,7 @@ public class AssociadoService {
                 .filter(a -> email == null || a.getEmail().toLowerCase().contains(email.toLowerCase()))
                 .filter(a -> cidade == null || (a.getCidade() != null && a.getCidade().toLowerCase().contains(cidade.toLowerCase())))
                 .filter(a -> estado == null || (a.getEstado() != null && a.getEstado().equalsIgnoreCase(estado)))
-                .filter(a -> ativo == null || a.getAtivo().equals(ativo))
+                .filter(a -> ativo == null || ativo.equals(a.getAtivo()))
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }

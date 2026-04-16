@@ -28,11 +28,15 @@ public class UsuarioService {
     private final JwtTokenProvider jwtTokenProvider;
 
     public LoginResponse login(LoginRequest request) {
+        // Mensagem genérica para evitar enumeração de e-mails válidos: não
+        // diferenciamos entre "usuário não encontrado", "usuário inativo" e
+        // "senha incorreta" no erro retornado ao cliente.
         UsuarioPorEmail usuarioPorEmail = usuarioPorEmailRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new BusinessException("Credenciais inválidas"));
 
         if (!Boolean.TRUE.equals(usuarioPorEmail.getAtivo())) {
-            throw new BusinessException("Usuário inativo");
+            log.warn("Tentativa de login em conta inativa: {}", request.getEmail());
+            throw new BusinessException("Credenciais inválidas");
         }
 
         if (!passwordEncoder.matches(request.getSenha(), usuarioPorEmail.getSenha())) {
