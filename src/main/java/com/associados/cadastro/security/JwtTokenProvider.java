@@ -14,13 +14,30 @@ import java.util.Date;
 @Component
 public class JwtTokenProvider {
 
+    /**
+     * Tamanho mínimo da chave HMAC-SHA256, em bytes (256 bits).
+     * JWTs assinados com chaves menores são inseguros.
+     */
+    private static final int MIN_SECRET_LENGTH_BYTES = 32;
+
     private final SecretKey key;
     private final long expiracaoMs;
 
     public JwtTokenProvider(
-            @Value("${jwt.secret:cadastro-associados-secret-key-que-deve-ser-alterada-em-producao-2024}") String secret,
+            @Value("${jwt.secret:}") String secret,
             @Value("${jwt.expiracao:86400000}") long expiracaoMs) {
-        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        if (secret == null || secret.isBlank()) {
+            throw new IllegalStateException(
+                    "A propriedade 'jwt.secret' (variável de ambiente JWT_SECRET) é obrigatória. " +
+                            "Defina um valor com no mínimo " + MIN_SECRET_LENGTH_BYTES + " caracteres.");
+        }
+        byte[] secretBytes = secret.getBytes(StandardCharsets.UTF_8);
+        if (secretBytes.length < MIN_SECRET_LENGTH_BYTES) {
+            throw new IllegalStateException(
+                    "A propriedade 'jwt.secret' deve ter no mínimo " + MIN_SECRET_LENGTH_BYTES +
+                            " bytes (caracteres ASCII) para uso com HMAC-SHA256.");
+        }
+        this.key = Keys.hmacShaKeyFor(secretBytes);
         this.expiracaoMs = expiracaoMs;
     }
 

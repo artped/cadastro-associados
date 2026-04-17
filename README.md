@@ -48,13 +48,30 @@ CREATE KEYSPACE IF NOT EXISTS cadastro_associados
 WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
 ```
 
+## Variáveis de Ambiente Obrigatórias
+
+A partir da versão atual, algumas configurações de segurança **devem** ser fornecidas via variáveis de ambiente; a aplicação falhará ao iniciar caso não estejam definidas.
+
+| Variável | Descrição | Exemplo |
+|----------|-----------|---------|
+| `JWT_SECRET` | Chave secreta para assinar tokens JWT. Mínimo **32 caracteres** (HMAC-SHA256). **Não reutilize entre ambientes.** | `openssl rand -base64 48` |
+| `APP_CORS_ALLOWED_ORIGINS` | Lista CSV de origens permitidas pelo CORS. **Não use `*`**. | `https://app.exemplo.com,https://admin.exemplo.com` |
+| `JWT_EXPIRACAO` | (opcional) Tempo de expiração do token, em ms. Padrão `86400000` (24h). | `3600000` |
+
+Exemplo para gerar um segredo forte:
+
+```bash
+export JWT_SECRET="$(openssl rand -base64 48)"
+export APP_CORS_ALLOWED_ORIGINS="https://app.exemplo.com"
+```
+
 ## Como Executar
 
 ```bash
 # Compilar o projeto
 mvn clean compile
 
-# Executar a aplicação
+# Executar a aplicação (defina JWT_SECRET e APP_CORS_ALLOWED_ORIGINS antes)
 mvn spring-boot:run
 
 # Ou gerar o JAR e executar
@@ -186,8 +203,9 @@ As configurações podem ser alteradas no arquivo `src/main/resources/applicatio
 | `spring.cassandra.contact-points` | Host do Cassandra | localhost |
 | `spring.cassandra.port` | Porta do Cassandra | 9042 |
 | `spring.cassandra.keyspace-name` | Nome do keyspace | cadastro_associados |
-| `jwt.secret` | Chave secreta do JWT | (alterar em produção) |
+| `jwt.secret` | Chave secreta do JWT (`JWT_SECRET`) | **obrigatório, sem padrão** |
 | `jwt.expiracao` | Tempo de expiração do token (ms) | 86400000 (24h) |
+| `app.cors.allowed-origins` | Origens permitidas pelo CORS (`APP_CORS_ALLOWED_ORIGINS`) | vazio (nenhuma origem) |
 
 ## Tecnologias
 
